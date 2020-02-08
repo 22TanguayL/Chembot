@@ -8,21 +8,15 @@ GREETINGS = ["Hello.","G'day!","¡Hola!","Welcome!","Hi!","What’s up?", "Hey h
 
 class ElementMaster:
     def __init__(self):
-        self.ELEMENTS_BY_NAME = {}
-        self.ELEMENTS_BY_NUMBER = {}
-        self.ELEMENTS_BY_SYMBOL = {}
+        self.__elements = {}
         
-    def getByName(self, name):
-        return self.ELEMENTS_BY_NAME[name.lower()]
-    def getBySymbol(self, symbol):
-        return self.ELEMENTS_BY_SYMBOL[symbol]
-    def getByNumber(self, number):
-        return self.ELEMENTS_BY_NUMBER[int(number)]
+    def getElement(self, arg):
+        return self.__elements[arg]
 
     def addElement(self, element):
-        self.ELEMENTS_BY_NAME[element.name] = element
-        self.ELEMENTS_BY_NUMBER[element.atomic_number] = element
-        self.ELEMENTS_BY_SYMBOL[element.symbol] = element
+        self.__elements[element.name.lower()] = element
+        self.__elements[element.symbol] = element
+        self.__elements[str(element.atomic_number)] = element
         
 class Element:
     def __init__(self, name, symbol, atomic_number, atomic_mass, ionic_charge=None,electronegativity=None,isMetal=True):
@@ -77,7 +71,7 @@ class Compound:
         self.elements = []
         for symbol in symbolList:
             elementSymbol, elementCount = splitelementandnum(symbol)
-            element = elementMaster.getBySymbol(elementSymbol)
+            element = elementMaster.getElement(elementSymbol)
             for i in range(elementCount):
                 self.elements.append(element) 
 
@@ -155,58 +149,33 @@ def helpMenu():
     print("'element info' - find information about any 1 element")
     return
 
-def elementInfoMenu():
-    method = ("Name", "Symbol", "Atomic #")
-    while True:
-        print ("Enter 1 if you would like to search by element name")
-        print ("Enter 2 if you would like to search by element symbol")
-        print ("Enter 3 if you would like to search by atomic number")
-        choice = input("Enter 1, 2, or 3: ")
-        if choice.lower() == "back":
-            return False
-        elif choice.lower() == "quit":
-            return True
-        else:
-            i = int(choice)
-            choice1 = input(method[i-1] + " >")
-            if i == 1:
-                try:
-                    choice1 = str(choice1).lower()
-                    e = elementMaster.getByName(choice1.lower())
-                except KeyError:
-                    print ("ERROR: Input unreadable, check capitalization")
-            elif i == 2:
-                try:
-                    e = elementMaster.getBySymbol(choice1)
-                except KeyError:
-                    print ("ERROR: Input unreadable, check capitalization")
-            elif i == 3:
-                try:
-                    choice1 = int(choice1)
-                    e = elementMaster.getByNumber(choice1)
-                except KeyError:
-                    print ("ERROR: Input unreadable, check capitalization")
-            print("Name: " + e.getName())
-            print("Symbol: " + e.getSymbol())
-            print("Average Atomic Mass: " + str(e.getAtomicMass()) + " amu")
-            chrg = e.getIonicCharge()
-            if chrg == None:
-                chrg = "N/A"
-            print("Ionic Charge: " + str(chrg))
-            mtl = ""
-            if e.getIsMetal() == False:
-                mtl = "nonmetal"
-            elif e.getIsMetal() == True:
-                mtl = "metal"
-            print(e.getName() + " is a " + str(mtl))
-            print("")
-            
-        #print(choice)
+def elementInfo(arg):
+    try:
+        e = elementMaster.getElement(arg)
+        print("Name: " + e.getName())
+        print("Symbol: " + e.getSymbol())
+        print("Atomic Number: " + str(e.getAtomicNumber()))
+        print("Average Atomic Mass: " + str(e.getAtomicMass()) + " amu")
+        chrg = e.getIonicCharge()
+        if chrg == None:
+            chrg = "N/A"
+        print("Ionic Charge: " + str(chrg))
+        mtl = ""
+        if e.getIsMetal() == False:
+            mtl = "nonmetal"
+        elif e.getIsMetal() == True:
+            mtl = "metal"
+        print(e.getName() + " is a " + str(mtl))
+        print("")
+    except KeyError:
+        print ("ERROR: Input unreadable, check capitalization")
+    return
 
-def molarMass(arg):
+def mass(arg):
     try:
         c = Compound(arg)
         c.getMolarMass()
+        print("")
     except KeyError:
         print ("ERROR: Input unreadable, check capitalization")
     return
@@ -216,6 +185,7 @@ def ionicCharge(arg):
         c = Compound(arg)
         result = c.getCharge()
         print ("Ionic charge is " + str(result))
+        print("")
     except KeyError:
         print ("ERROR: Input unreadable, check capitalization")
                 
@@ -223,20 +193,25 @@ class UI(cmd.Cmd):
     intro = str(random.choice(GREETINGS) + " Welcome to Leon's Chembot. Type 'help' for help")
     prompt = "Cmd>"
     file = None
-    #def help(self):
-        #print("'molar mass' - find molar mass of any compound or element")
-        #print("'ionic charge' - find ionic charge of an element or compound")
-        #print("'element info' - find information about any 1 element")
-        #print("")
     def do_ionic_charge(self, arg):
         'get ionic charge of an element or compound. Ex: ionic_charge C6H12O6'
         ionicCharge(arg)
+    def do_mass(self, arg):
+        'get mass of an element or compound. Ex: mass C6H12O6'
+        mass(arg)
+    def do_info(self, arg):
+        'get info about an element. Ex: info Fe'
+        elementInfo(arg)
+    def do_exit(self, arg):
+        'Exit Chembot UI'
+        print('Thank you for using Chembot')
+        return True
     
 FORMAT = '[%(asctime)s] %(message)s'
 logging.basicConfig(stream=sys.stderr, level=logging.INFO, format=FORMAT, datefmt='%H:%M:%S')
 
 elementMaster = ElementMaster()
-with open('Elements.csv',newline='') as csv_file:
+with open('data/elements.csv',newline='') as csv_file:
     csv_reader = csv.reader(csv_file, delimiter=',')
     line_count = 0
 
@@ -268,8 +243,6 @@ with open('Elements.csv',newline='') as csv_file:
             elementMaster.addElement(element)
             line_count += 1
     print(f'Processed {line_count} lines.')
-
-#print (ELEMENTS_BY_NAME)
 
 #mainMenu()
 if __name__ == '__main__':
