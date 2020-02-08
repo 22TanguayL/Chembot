@@ -4,6 +4,7 @@ import csv, re, random
 GREETINGS = ["Hello.","G'day!","¡Hola!","Welcome!","Hi!","What’s up?", "Hey homie!","Salutations.",
              "Greetings.", "Hey!", "'Sup!","Howdy!","G'day mate!", "Wazzzzzup!!!"]
 
+DEBUG = False
 #TODO LIST: Balance ionic charge of compound, balance equations, stoichiometry
 
 class ElementMaster:
@@ -30,31 +31,31 @@ class Element:
         #defines variables
         
     def getName(self):
-        #print (self.name)
+        if DEBUG: print ("name = " + self.name)
         return (self.name)
         #returns wanted variable(s)
     
     def getSymbol(self):
-        #print (self.symbol)
+        if DEBUG: print ("symbol = " + self.symbol)
         return (self.symbol)
         #returns wanted variable(s)
     
     def getAtomicMass(self):
-        #print (self.atomic_mass)
+        if DEBUG: print ("atomic mass = " + str(self.atomic_mass))
         return float(self.atomic_mass)
         #returns wanted variable(s)
     
     def getAtomicNumber(self):
-        #print (self.atomic_number)
+        if DEBUG: print ("atomic number = " + str(self.atomic_number))
         return int(self.atomic_number)
         #returns wanted variable(s)
     
     def getIonicCharge(self):
         if self.ionic_charge is not None:
-            #print (self.ionic_charge)
+            if DEBUG: print ("ionic charge = " + str(self.ionic_charge))
             return int(self.ionic_charge)
         else:
-            #print ("ionic charge unclear")
+            if DEBUG: print ("ionic charge unclear")
             return None
         #returns wanted variable(s) only when present
     def getIsMetal(self):
@@ -73,36 +74,36 @@ class Compound:
             elementSymbol, elementCount = splitelementandnum(symbol)
             element = elementMaster.getElement(elementSymbol)
             for i in range(elementCount):
-                self.elements.append(element) 
-
-
-
-        
+                self.elements.append(element)
+                
     def getMolarMass(self):
         atomicMass = sum([e.getAtomicMass() for e in self.elements])
-        if self.name == "Unknown":
-            print ("Molar Mass of " + str(self.symbols) + " = " + str(atomicMass) + "g/mol")
-        else:
-            print ("Molar Mass of " + str(self.name) + " = " + str(atomicMass) + "g/mol")
+        if DEBUG:
+            if self.name == "Unknown":
+                print ("Molar Mass of " + str(self.symbols) + " = " + str(atomicMass) + "g/mol")
+            else:
+                print ("Molar Mass of " + str(self.name) + " = " + str(atomicMass) + "g/mol")
 
         return atomicMass
         #calls the splitcompound function
-    
+
+    def getSymbols(self):
+        return self.symbols
     def getCharge(self):
         charge = 0
         for element in self.elements:
             s = element.getSymbol()
             j = element.getIonicCharge()
             if j is None:
-                print ("Charge cannot be properly taken")
+                if DEBUG: print ("Charge cannot be properly taken")
                 return None
             else:
                 charge += int(j)
-
-        if self.name == "Unknown":
-            print ("Charge of " + str(self.symbols) + " = " + str(charge))
-        else:
-            print ("Charge of " + str(self.name) + " = " + str(charge))
+        if DEBUG:
+            if self.name == "Unknown":
+                print ("Charge of " + str(self.symbols) + " = " + str(charge))
+            else:
+                print ("Charge of " + str(self.name) + " = " + str(charge))
         return charge
 
 def splitcompound(compound):
@@ -117,10 +118,10 @@ def splitelementandnum(string):
     numbers = []
     for char in string:
         if char.isdigit():
-            #print (char + " is a number")
+            if DEBUG: print (char + " is a number")
             numbers.append(char)
         else:
-            #print (char + " is a letter")
+            if DEBUG: print (char + " is a letter")
             letters.append(char)
             
     rletters = ''.join(letters)
@@ -143,11 +144,6 @@ def cumsum(listvar):
     return s
     #returns final sum
 
-def helpMenu():
-    print("'molar mass' - find molar mass of any compound or element")
-    print("'ionic charge' - find ionic charge of an element or compound")
-    print("'element info' - find information about any 1 element")
-    return
 
 def elementInfo(arg):
     try:
@@ -174,34 +170,142 @@ def elementInfo(arg):
 def mass(arg):
     try:
         c = Compound(arg)
-        c.getMolarMass()
-        print("")
+        return c.getMolarMass()
     except KeyError:
-        print ("ERROR: Input unreadable, check capitalization")
+        return "ERROR: Input unreadable, check capitalization"
     return
 
 def ionicCharge(arg):
     try:
         c = Compound(arg)
-        result = c.getCharge()
-        print ("Ionic charge is " + str(result))
-        print("")
+        return(str(c.getCharge()))
     except KeyError:
-        print ("ERROR: Input unreadable, check capitalization")
-                
+        return "ERROR: Input unreadable, check capitalization"
+
+# 2Fe + NH3 -> 3FH + N2
+# 55g FH 3 1 NH3
+# stoichGramsToGrams grams=54 sub1=Fe molRatio1 mol2 HFe
+def stoichGramsToGrams(grams1, substance1, mol1 ,mol2 ,substance2):
+    #grams[i] = mass of substance [i] input
+    #molMass[i] = calculate for substance [i]
+    #molRatio = mol1 / mol2
+    #grams[2] = grams[1] / (molmass[1] / molratio) * molMass[2]
+    #find molMass1
+    compound1 = Compound(substance1)
+    if DEBUG: print("compound1 = " + str(compound1))
+    molMass1 = compound1.getMolarMass()
+    if DEBUG: print("molMass1 = " + str(molMass1))
+    numMoles1 = grams1 / molMass1
+    if DEBUG: print("numMoles1 = " + str(numMoles1))
+    molRatio = (mol1 / mol2)
+    if DEBUG: print("molRatio = " + str(molRatio))
+    numMoles2 = numMoles1 / (molRatio)
+    if DEBUG: print("numMoles2 = " + str(numMoles2))
+    compound2 = Compound(substance2)
+    if DEBUG: print("compound2 = " + str(compound2))
+    molMass2 = compound2.getMolarMass()
+    if DEBUG: print("molMass2 = " + str(molMass2))
+    grams2 = numMoles2 * molMass2
+    return grams2
+    
+def stoichMolesToMoles(numMoles1, substance1, mol1, substance2, mol2):
+    compound1 = Compound(substance1)
+    if DEBUG: print("compound1 = " + str(compound1))
+    molRatio = (mol1 / mol2)
+    if DEBUG: print("molRatio = " + str(molRatio))
+    numMoles2 = numMoles1 / (molRatio)
+    if DEBUG: print("numMoles2 = " + str(numMoles2))
+    return numMoles2
+
+def stoichMolesToGrams(numMoles1, substance1, mol1 ,mol2 ,substance2):
+    compound1 = Compound(substance1)
+    if DEBUG: print("compound1 = " + str(compound1))
+    molRatio = (mol1 / mol2)
+    if DEBUG: print("molRatio = " + str(molRatio))
+    numMoles2 = numMoles1 / (molRatio)
+    if DEBUG: print("numMoles2 = " + str(numMoles2))
+    compound2 = Compound(substance2)
+    if DEBUG: print("compound2 = " + str(compound2))
+    molMass2 = compound2.getMolarMass()
+    if DEBUG: print("molMass2 = " + str(molMass2))
+    grams2 = numMoles2 * molMass2
+    return grams2
+
+def stoichGramsToMoles(grams1, substance1, mol1 ,mol2 ,substance2):
+    compound1 = Compound(substance1)
+    if DEBUG: print("compound1 = " + str(compound1))
+    molMass1 = compound1.getMolarMass()
+    if DEBUG: print("molMass1 = " + str(molMass1))
+    numMoles1 = grams1 / molMass1
+    if DEBUG: print("numMoles1 = " + str(numMoles1))
+    molRatio = (mol1 / mol2)
+    if DEBUG: print("molRatio = " + str(molRatio))
+    numMoles2 = numMoles1 / (molRatio)
+    if DEBUG: print("numMoles2 = " + str(numMoles2))
+    return numMoles2
+
 class UI(cmd.Cmd):
     intro = str(random.choice(GREETINGS) + " Welcome to Leon's Chembot. Type 'help' for help")
     prompt = "Cmd>"
     file = None
     def do_ionic_charge(self, arg):
         'get ionic charge of an element or compound. Ex: ionic_charge C6H12O6'
-        ionicCharge(arg)
+        print(ionicCharge(arg))
     def do_mass(self, arg):
         'get mass of an element or compound. Ex: mass C6H12O6'
-        mass(arg)
+        print(mass(arg))
+    def do_stoichg2g(self, arg):
+        'apply stoichiometry to get grams of 1 substance from grams of another in an equation'
+        grams1 = float(input("grams of first substance: "))
+        substance1 = input("first substance symbols: ")
+        mol1 = int(input("moles of substance 1 in mol ratio: "))
+        mol2 = int(input("moles of substance 2 in mol ratio: "))
+        substance2 = input("second  substance symbols: ")
+        compound2 = Compound(substance2)
+        grams2 = stoichGramsToGrams(grams1, substance1, mol1 ,mol2 ,substance2)
+        print(str(grams2) + " grams of " + str(compound2.getSymbols()))
+    def do_stoichg2m(self, arg):
+        'apply stoichiometry to get moles of 1 substance from grams of another in an equation'
+        grams1 = float(input("grams of first substance: "))
+        substance1 = input("first substance symbols: ")
+        mol1 = int(input("moles of substance 1 in mol ratio: "))
+        mol2 = int(input("moles of substance 2 in mol ratio: "))
+        substance2 = input("second  substance symbols: ")
+        compound2 = Compound(substance2)
+        numMoles2 = stoichGramsToMoles(grams1, substance1, mol1 ,mol2 ,substance2)
+        print(str(numMoles2) + " moles of " + str(compound2.getSymbols()))
+    def do_stoichm2g(self, arg):
+        'apply stoichiometry to get grams of 1 substance from moles of another in an equation'
+        substance1 = input("first substance symbols: ")
+        numMoles1 = int(input("moles of substance 1: "))
+        mol1 = int(input("moles of substance 1 in mol ratio: "))
+        mol2 = int(input("moles of substance 2 in mol ratio: "))
+        substance2 = input("second  substance symbols: ")
+        compound2 = Compound(substance2)
+        grams2 = stoichMolesToGrams(numMoles1, substance1, mol1 ,mol2 ,substance2)
+        print(str(grams2) + " grams of " + str(compound2.getSymbols()))
+    def do_stoichm2m(self, arg):
+        'apply stoichiometry to get moles of 1 substance from moles of another in an equation'
+        substance1 = input("first substance symbols: ")
+        numMoles1 = int(input("moles of substance 1: "))
+        mol1 = int(input("moles of substance 1 in mol ratio: "))
+        mol2 = int(input("moles of substance 2 in mol ratio: "))
+        substance2 = input("second  substance symbols: ")
+        compound2 = Compound(substance2)
+        grams2 = stoichMolesToMoles(numMoles1, substance1, mol1, substance2, mol2)
+        print(str(grams2) + " moles of " + str(compound2.getSymbols()))
     def do_info(self, arg):
         'get info about an element. Ex: info Fe'
         elementInfo(arg)
+    def do_toggle_dev(self, arg):
+        'get additional, behind the scenes info on what is going on in the program'
+        global DEBUG
+        if DEBUG:
+            DEBUG = False
+            print("dev mode deactivated")
+        else:
+            DEBUG = True
+            print("dev mode activated")
     def do_exit(self, arg):
         'Exit Chembot UI'
         print('Thank you for using Chembot')
