@@ -5,7 +5,7 @@ GREETINGS = ["Hello.","G'day!","¡Hola!","Welcome!","Hi!","What’s up?", "Hey h
              "Greetings.", "Hey!", "'Sup!","Howdy!","G'day mate!", "Wazzzzzup!!!"]
 
 DEBUG = False
-#TODO LIST: Balance ionic charge of compound, balance equations, stoichiometry
+#TODO LIST: Balance ionic charge of compound, balance equations
 
 class ElementMaster:
     def __init__(self):
@@ -182,15 +182,8 @@ def ionicCharge(arg):
     except KeyError:
         return "ERROR: Input unreadable, check capitalization"
 
-# 2Fe + NH3 -> 3FH + N2
-# 55g FH 3 1 NH3
-# stoichGramsToGrams grams=54 sub1=Fe molRatio1 mol2 HFe
+
 def stoichGramsToGrams(grams1, substance1, mol1 ,mol2 ,substance2):
-    #grams[i] = mass of substance [i] input
-    #molMass[i] = calculate for substance [i]
-    #molRatio = mol1 / mol2
-    #grams[2] = grams[1] / (molmass[1] / molratio) * molMass[2]
-    #find molMass1
     compound1 = Compound(substance1)
     if DEBUG: print("compound1 = " + str(compound1))
     molMass1 = compound1.getMolarMass()
@@ -277,13 +270,14 @@ class UI(cmd.Cmd):
     def do_stoichm2g(self, arg):
         'apply stoichiometry to get grams of 1 substance from moles of another in an equation'
         substance1 = input("first substance symbols: ")
-        numMoles1 = int(input("moles of substance 1: "))
-        mol1 = int(input("moles of substance 1 in mol ratio: "))
-        mol2 = int(input("moles of substance 2 in mol ratio: "))
+        compound1 = Compound(substance1)
+        numMoles1 = int(input("moles of %s: "%(compound1.getSymbols())))
         substance2 = input("second  substance symbols: ")
         compound2 = Compound(substance2)
+        mol1 = int(input("moles of %s in mol ratio: "%(compound1.getSymbols())))
+        mol2 = int(input("moles of %s in mol ratio: "%(compound2.getSymbols())))
         grams2 = stoichMolesToGrams(numMoles1, substance1, mol1 ,mol2 ,substance2)
-        print(str(grams2) + " grams of " + str(compound2.getSymbols()))
+        print("%f grams of %s"%(grams2, compound2.getSymbols()))
     def do_stoichm2m(self, arg):
         'apply stoichiometry to get moles of 1 substance from moles of another in an equation'
         substance1 = input("first substance symbols: ")
@@ -348,6 +342,5 @@ with open('data/elements.csv',newline='') as csv_file:
             line_count += 1
     print(f'Processed {line_count} lines.')
 
-#mainMenu()
 if __name__ == '__main__':
     UI().cmdloop()
